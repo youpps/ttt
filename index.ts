@@ -133,7 +133,7 @@ async function bootstrap() {
       }
     });
   } catch (e) {
-    // console.log(e);
+    console.log(e);
     console.log("Произошла ошибка");
   }
 }
