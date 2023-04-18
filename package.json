@@ -1,0 +1,20 @@
+{
+  "name": "bet-hub-parser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.14.0"
+  },
+  "dependencies": {
+    "puppeteer": "^19.7.1",
+    "telegraf": "^4.11.2",
+    "telegram": "^2.15.10"
+  }
+}
