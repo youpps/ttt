@@ -27,7 +27,7 @@ async function bootstrap() {
 
     await client.getMe();
 
-    const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox"] });
+    const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
 
     await page.setViewport({

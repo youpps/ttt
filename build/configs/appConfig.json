@@ -1,0 +1,39 @@
+{
+    "apiId": 22501796,
+    "apiHash": "dca7ff1d754ab6ab822a5efc2b63ff41",
+    "telegramPhone": "89139368397",
+    "telegramPassword": "Passparol1",
+    "bethubLogin": "Popugai",
+    "bethubPassword": "Popugaipetya1",
+    "botToken": "6273152797:AAGPHh5m8xJF7AWQuDH93fv5fQXsqsgwz9U",
+    "recieverIds": [
+        345073379,
+        182545698,
+        464770061,
+        359531032,
+        5039544218,
+        1373328489
+    ],
+    "privateers": {
+        "ClaudioLive.SOC.UT": {
+            "url": "https://bet-hub.com/sub/236730/ClaudioLive.SOC.U/picks/",
+            "chatId": -1001809265453
+        },
+        "BrazzersLiv.SOC.U": {
+            "url": "https://bet-hub.com/sub/145591/BrazzersLiv.SOC.U/picks/",
+            "chatId": -1001809265453
+        },
+        "Nazgul827Li.IH.L": {
+            "url": "https://bet-hub.com/sub/146950/Nazgul827Li.IH.L/picks/",
+            "chatId": -1001809265453
+        },
+        "BetOne-TT.TT.UT": {
+            "url": "https://bet-hub.com/sub/223908/BetOne-TT.TT.UT/picks/",
+            "chatId": -1001809265453
+        },
+        "live-ht.SOC.L": {
+            "url": "https://bet-hub.com/sub/190806/live-ht.SOC.L/picks/",
+            "chatId": -1001809265453
+        }
+    }
+}
