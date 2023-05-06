@@ -12,11 +12,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const puppeteer_1 = __importDefault(require("puppeteer"));
+const puppeteer_extra_1 = __importDefault(require("puppeteer-extra"));
+const puppeteer_extra_plugin_stealth_1 = __importDefault(require("puppeteer-extra-plugin-stealth"));
 const appConfig_json_1 = __importDefault(require("./configs/appConfig.json"));
 const session_1 = __importDefault(require("./utils/session"));
 const telegram_1 = __importDefault(require("./utils/telegram"));
+const random_useragent_1 = __importDefault(require("random-useragent"));
 const irbisBotToken = "6120857007:AAFKLS_yfOcPCltrCU-y-uXCnUNTvyGmIjU";
+puppeteer_extra_1.default.use((0, puppeteer_extra_plugin_stealth_1.default)());
+const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36";
 function bootstrap() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -33,13 +37,8 @@ function bootstrap() {
             });
             yield client.start();
             yield client.getMe();
-            const browser = yield puppeteer_1.default.launch({ headless: true });
-            const page = yield browser.newPage();
-            yield page.setViewport({
-                height: 1080,
-                width: 1920,
-            });
-            yield page.goto("https://bet-hub.com/");
+            const browser = yield puppeteer_extra_1.default.launch({ headless: true });
+            const page = yield createPage(browser, "https://bet-hub.com/");
             const loginInput = yield page.waitForSelector("#user_name_id_module");
             const passwordInput = yield page.waitForSelector("#user_password_id_module");
             const authButton = yield page.waitForSelector(".auth_button");
@@ -76,12 +75,7 @@ function bootstrap() {
                         return;
                     }
                     console.log("Начало создания скриншота");
-                    const newPage = yield browser.newPage();
-                    yield newPage.setViewport({
-                        height: 1080,
-                        width: 1920,
-                    });
-                    yield newPage.goto(privateerObj.url);
+                    const newPage = yield createPage(browser, privateerObj.url);
                     const showButtons = yield newPage.$$(".button_general");
                     for (let button of showButtons) {
                         yield new Promise((rs) => setTimeout(rs, 10000));
@@ -118,6 +112,62 @@ function bootstrap() {
             console.log(e);
             console.log("Произошла ошибка");
         }
+    });
+}
+function createPage(browser, url) {
+    return __awaiter(this, void 0, void 0, function* () {
+        //Randomize User agent or Set a valid one
+        const userAgent = random_useragent_1.default.getRandom();
+        const UA = userAgent || USER_AGENT;
+        const page = yield browser.newPage();
+        //Randomize viewport size
+        yield page.setViewport({
+            height: 1080,
+            width: 1920,
+            deviceScaleFactor: 1,
+            hasTouch: false,
+            isLandscape: false,
+            isMobile: false,
+        });
+        yield page.setUserAgent(UA);
+        yield page.setJavaScriptEnabled(true);
+        yield page.setDefaultNavigationTimeout(0);
+        //Skip images/styles/fonts loading for performance
+        yield page.setRequestInterception(true);
+        page.on("request", (req) => {
+            if (req.resourceType() == "stylesheet" || req.resourceType() == "font" || req.resourceType() == "image") {
+                req.abort();
+            }
+            else {
+                req.continue();
+            }
+        });
+        yield page.evaluateOnNewDocument(`() => {
+    Object.defineProperty(navigator, "webdriver", {
+      get: () => false,
+    });
+  }`);
+        yield page.evaluateOnNewDocument(`() => {
+    window.chrome = {
+      runtime: {},
+    };
+  }`);
+        yield page.evaluateOnNewDocument(`() => {
+    const originalQuery = window.navigator.permissions.query;
+    return (window.navigator.permissions.query = (parameters) => (parameters.name === "notifications" ? Promise.resolve({ state: Notification.permission }) : originalQuery(parameters)));
+  }`);
+        yield page.evaluateOnNewDocument(`() => {
+    Object.defineProperty(navigator, "plugins", {
+      get: () => [1, 2, 3, 4, 5],
+    });
+  }`);
+        yield page.evaluateOnNewDocument(`() => {
+    Object.defineProperty(navigator, "languages", {
+      get: () => ["en-US", "en"],
+    });
+  }`);
+        yield page.goto(url, { waitUntil: "networkidle2", timeout: 0 });
+        return page;
     });
 }
 bootstrap();

@@ -10,10 +10,14 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^18.14.0"
+    "@types/node": "^18.14.0",
+    "@types/random-useragent": "^0.3.1"
   },
   "dependencies": {
     "puppeteer": "^19.7.1",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "random-useragent": "^0.5.0",
     "telegraf": "^4.11.2",
     "telegram": "^2.15.10"
   }
