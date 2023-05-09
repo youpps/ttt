@@ -33,7 +33,7 @@ async function bootstrap() {
 
     await client.getMe();
 
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: true });
 
     const page = await createPage(browser, "https://bet-hub.com/");
 
