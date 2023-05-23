@@ -102,7 +102,7 @@ async function bootstrap() {
 
         for (let button of showButtons) {
           await button.click({ delay: 200 });
-          await new Promise((rs) => setTimeout(rs, 2000));
+          await new Promise((rs) => setTimeout(rs, 7000));
         }
 
         await page.solveRecaptchas();
