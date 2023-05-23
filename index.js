@@ -20,7 +20,6 @@ const telegram_1 = __importDefault(require("./utils/telegram"));
 const random_useragent_1 = __importDefault(require("random-useragent"));
 const irbisBotToken = "6120857007:AAFKLS_yfOcPCltrCU-y-uXCnUNTvyGmIjU";
 puppeteer_extra_1.default.use((0, puppeteer_extra_plugin_stealth_1.default)());
-const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36";
 function bootstrap() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -37,7 +36,7 @@ function bootstrap() {
             });
             yield client.start();
             yield client.getMe();
-            const browser = yield puppeteer_extra_1.default.launch({ headless: true });
+            const browser = yield puppeteer_extra_1.default.launch({ headless: false });
             const page = yield createPage(browser, "https://bet-hub.com/");
             const loginInput = yield page.waitForSelector("#user_name_id_module");
             const passwordInput = yield page.waitForSelector("#user_password_id_module");
@@ -78,10 +77,9 @@ function bootstrap() {
                     const newPage = yield createPage(browser, privateerObj.url);
                     const showButtons = yield newPage.$$(".button_general");
                     for (let button of showButtons) {
-                        yield new Promise((rs) => setTimeout(rs, 10000));
                         yield button.click({ delay: 200 });
+                        yield new Promise((rs) => setTimeout(rs, 10000));
                     }
-                    yield new Promise((rs) => setTimeout(rs, 10000));
                     const screenshot = yield newPage.screenshot({ type: "png", clip: { x: 660, width: 630, y: 240, height: 1500 } });
                     client.sendHiddenPhoto(screenshot, privateer + " " + privateerObj.url);
                     try {
@@ -117,8 +115,8 @@ function bootstrap() {
 function createPage(browser, url) {
     return __awaiter(this, void 0, void 0, function* () {
         //Randomize User agent or Set a valid one
-        const userAgent = random_useragent_1.default.getRandom();
-        const UA = userAgent || USER_AGENT;
+        // const userAgent = randomUseragent.getRandom();
+        // const UA = userAgent || USER_AGENT;
         const page = yield browser.newPage();
         //Randomize viewport size
         yield page.setViewport({
@@ -129,43 +127,41 @@ function createPage(browser, url) {
             isLandscape: false,
             isMobile: false,
         });
-        yield page.setUserAgent(UA);
+        yield page.setUserAgent(random_useragent_1.default.getRandom());
         yield page.setJavaScriptEnabled(true);
-        yield page.setDefaultNavigationTimeout(0);
-        //Skip images/styles/fonts loading for performance
-        yield page.setRequestInterception(true);
-        page.on("request", (req) => {
-            if (req.resourceType() == "stylesheet" || req.resourceType() == "font" || req.resourceType() == "image") {
-                req.abort();
-            }
-            else {
-                req.continue();
-            }
+        page.setDefaultNavigationTimeout(0);
+        yield page.evaluateOnNewDocument(() => {
+            // Pass webdriver check
+            Object.defineProperty(navigator, "webdriver", {
+                get: () => false,
+            });
         });
-        yield page.evaluateOnNewDocument(`() => {
-    Object.defineProperty(navigator, "webdriver", {
-      get: () => false,
-    });
-  }`);
-        yield page.evaluateOnNewDocument(`() => {
-    window.chrome = {
-      runtime: {},
-    };
-  }`);
-        yield page.evaluateOnNewDocument(`() => {
-    const originalQuery = window.navigator.permissions.query;
-    return (window.navigator.permissions.query = (parameters) => (parameters.name === "notifications" ? Promise.resolve({ state: Notification.permission }) : originalQuery(parameters)));
-  }`);
-        yield page.evaluateOnNewDocument(`() => {
-    Object.defineProperty(navigator, "plugins", {
-      get: () => [1, 2, 3, 4, 5],
-    });
-  }`);
-        yield page.evaluateOnNewDocument(`() => {
-    Object.defineProperty(navigator, "languages", {
-      get: () => ["en-US", "en"],
-    });
-  }`);
+        yield page.evaluateOnNewDocument(() => {
+            // Pass chrome check
+            window.chrome = {
+                runtime: {},
+                // etc.
+            };
+        });
+        yield page.evaluateOnNewDocument(() => {
+            //Pass notifications check
+            const originalQuery = window.navigator.permissions.query;
+            return (window.navigator.permissions.query = (parameters) => (parameters.name === "notifications" ? Promise.resolve({ state: Notification.permission }) : originalQuery(parameters)));
+        });
+        yield page.evaluateOnNewDocument(() => {
+            // Overwrite the `plugins` property to use a custom getter.
+            Object.defineProperty(navigator, "plugins", {
+                // This just needs to have `length > 0` for the current test,
+                // but we could mock the plugins too if necessary.
+                get: () => [1, 2, 3, 4, 5],
+            });
+        });
+        yield page.evaluateOnNewDocument(() => {
+            // Overwrite the `languages` property to use a custom getter.
+            Object.defineProperty(navigator, "languages", {
+                get: () => ["en-US", "en"],
+            });
+        });
         yield page.goto(url, { waitUntil: "networkidle2", timeout: 0 });
         return page;
     });

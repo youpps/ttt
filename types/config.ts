@@ -6,6 +6,7 @@ interface IConfig {
   bethubLogin: string;
   bethubPassword: string;
   botToken: string;
+  twoCaptchaToken: string;
   recieverIds: number[];
   privateers: {
     [key: string]: {

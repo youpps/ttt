@@ -1,5 +1,6 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
+import RecaptchaPlugin from "puppeteer-extra-plugin-recaptcha";
 import config from "./configs/appConfig.json";
 import IConfig from "./types/config";
 import Session from "./utils/session";
@@ -9,13 +10,20 @@ import { Browser } from "puppeteer";
 
 const irbisBotToken = "6120857007:AAFKLS_yfOcPCltrCU-y-uXCnUNTvyGmIjU";
 
-puppeteer.use(StealthPlugin());
-
-const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36";
-
 async function bootstrap() {
   try {
-    const { apiId, apiHash, telegramPhone, telegramPassword, bethubLogin, bethubPassword, privateers, botToken } = config as IConfig;
+    const { apiId, apiHash, telegramPhone, telegramPassword, bethubLogin, bethubPassword, privateers, botToken, twoCaptchaToken } = config as IConfig;
+
+    puppeteer.use(StealthPlugin());
+    puppeteer.use(
+      RecaptchaPlugin({
+        provider: {
+          id: "2captcha",
+          token: twoCaptchaToken, // REPLACE THIS WITH YOUR OWN 2CAPTCHA API KEY ⚡
+        },
+        visualFeedback: true, // colorize reCAPTCHAs (violet = detected, green = solved)
+      })
+    );
 
     const session = await Session.getSession();
 
@@ -33,7 +41,7 @@ async function bootstrap() {
 
     await client.getMe();
 
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox"] });
 
     const page = await createPage(browser, "https://bet-hub.com/");
 
@@ -93,11 +101,11 @@ async function bootstrap() {
         const showButtons = await newPage.$$(".button_general");
 
         for (let button of showButtons) {
-          await new Promise((rs) => setTimeout(rs, 10000));
           await button.click({ delay: 200 });
+          await new Promise((rs) => setTimeout(rs, 2000));
         }
 
-        await new Promise((rs) => setTimeout(rs, 10000));
+        await page.solveRecaptchas();
 
         const screenshot = await newPage.screenshot({ type: "png", clip: { x: 660, width: 630, y: 240, height: 1500 } });
 
@@ -133,8 +141,8 @@ async function bootstrap() {
 
 async function createPage(browser: Browser, url: string) {
   //Randomize User agent or Set a valid one
-  const userAgent = randomUseragent.getRandom();
-  const UA = userAgent || USER_AGENT;
+  // const userAgent = randomUseragent.getRandom();
+  // const UA = userAgent || USER_AGENT;
   const page = await browser.newPage();
 
   //Randomize viewport size
@@ -147,48 +155,46 @@ async function createPage(browser: Browser, url: string) {
     isMobile: false,
   });
 
-  await page.setUserAgent(UA);
+  await page.setUserAgent(randomUseragent.getRandom());
   await page.setJavaScriptEnabled(true);
   page.setDefaultNavigationTimeout(0);
 
-  //Skip images/styles/fonts loading for performance
-  // await page.setRequestInterception(true);
-  // page.on("request", (req) => {
-  //   if (req.resourceType() == "stylesheet" || req.resourceType() == "font" || req.resourceType() == "image") {
-  //     req.abort();
-  //   } else {
-  //     req.continue();
-  //   }
-  // });
-
-  await page.evaluateOnNewDocument(`() => {
+  await page.evaluateOnNewDocument(() => {
+    // Pass webdriver check
     Object.defineProperty(navigator, "webdriver", {
       get: () => false,
     });
-  }`);
+  });
 
-  await page.evaluateOnNewDocument(`() => {
-    window.chrome = {
+  await page.evaluateOnNewDocument(() => {
+    // Pass chrome check
+    (window as any).chrome = {
       runtime: {},
+      // etc.
     };
-  }`);
+  });
 
-  await page.evaluateOnNewDocument(`() => {
-    const originalQuery = window.navigator.permissions.query;
-    return (window.navigator.permissions.query = (parameters) => (parameters.name === "notifications" ? Promise.resolve({ state: Notification.permission }) : originalQuery(parameters)));
-  }`);
+  await page.evaluateOnNewDocument(() => {
+    //Pass notifications check
+    const originalQuery = window.navigator.permissions.query as any;
+    return (window.navigator.permissions.query = (parameters: any) => (parameters.name === "notifications" ? Promise.resolve({ state: Notification.permission }) : originalQuery(parameters)));
+  });
 
-  await page.evaluateOnNewDocument(`() => {
+  await page.evaluateOnNewDocument(() => {
+    // Overwrite the `plugins` property to use a custom getter.
     Object.defineProperty(navigator, "plugins", {
+      // This just needs to have `length > 0` for the current test,
+      // but we could mock the plugins too if necessary.
       get: () => [1, 2, 3, 4, 5],
     });
-  }`);
+  });
 
-  await page.evaluateOnNewDocument(`() => {
+  await page.evaluateOnNewDocument(() => {
+    // Overwrite the `languages` property to use a custom getter.
     Object.defineProperty(navigator, "languages", {
       get: () => ["en-US", "en"],
     });
-  }`);
+  });
 
   await page.goto(url, { waitUntil: "networkidle2", timeout: 0 });
   return page;
