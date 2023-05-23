@@ -99,8 +99,8 @@ async function bootstrap() {
 
         const newPage = await createPage(browser, privateerObj.url);
 
-        for (let i = 0; i < 5; i++) {
-          await newPage.reload()
+        for (let i = 0; i < 20; i++) {
+          await newPage.reload();
           const showButtons = await newPage.$$(".button_general");
 
           for (let button of showButtons) {
