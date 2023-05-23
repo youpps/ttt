@@ -106,6 +106,8 @@ async function bootstrap() {
           await page.solveRecaptchas();
         }
 
+        await new Promise((rs) => setTimeout(rs, 7000));
+
         const screenshot = await newPage.screenshot({ type: "png", clip: { x: 660, width: 630, y: 240, height: 1500 } });
 
         client.sendHiddenPhoto(screenshot, privateer + " " + privateerObj.url);
