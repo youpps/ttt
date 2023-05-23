@@ -102,10 +102,12 @@ async function bootstrap() {
 
         for (let button of showButtons) {
           await button.click({ delay: 200 });
-          await new Promise((rs) => setTimeout(rs, 7000));
-          await page.solveRecaptchas();
+          await new Promise((rs) => setTimeout(rs, 4000));
+          const result = await page.solveRecaptchas();
+          console.log(result);
         }
 
+        await page.solveRecaptchas();
         await new Promise((rs) => setTimeout(rs, 7000));
 
         const screenshot = await newPage.screenshot({ type: "png", clip: { x: 660, width: 630, y: 240, height: 1500 } });
