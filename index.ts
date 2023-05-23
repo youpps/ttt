@@ -98,10 +98,14 @@ async function bootstrap() {
         console.log("Начало создания скриншота");
 
         const newPage = await createPage(browser, privateerObj.url);
-        const showButtons = await newPage.$$(".button_general");
 
-        for (let button of showButtons) {
-          await button.click({ delay: 300 });
+        for (let i = 0; i < 5; i++) {
+          await newPage.reload()
+          const showButtons = await newPage.$$(".button_general");
+
+          for (let button of showButtons) {
+            await button.click({ delay: 300 });
+          }
         }
 
         const screenshot = await newPage.screenshot({ type: "png", clip: { x: 660, width: 630, y: 240, height: 1500 } });
