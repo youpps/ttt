@@ -21,7 +21,11 @@ async function bootstrap() {
           id: "2captcha",
           token: twoCaptchaToken, // REPLACE THIS WITH YOUR OWN 2CAPTCHA API KEY ⚡
         },
-        visualFeedback: true, // colorize reCAPTCHAs (violet = detected, green = solved)
+        visualFeedback: false,
+        throwOnError: false,
+        solveInViewportOnly: false,
+        solveScoreBased: false,
+        solveInactiveChallenges: false,
       })
     );
 
@@ -101,10 +105,22 @@ async function bootstrap() {
         const showButtons = await newPage.$$(".button_general");
 
         for (let button of showButtons) {
-          await button.click({ delay: 300 });
+          await button.click({ delay: 200 });
+          await new Promise((rs) => setTimeout(rs, 2500));
         }
 
-        await new Promise((rs) => setTimeout(rs, 10000));
+        await new Promise((rs) => setTimeout(rs, 15000));
+
+        for (const frame of page.mainFrame().childFrames()) {
+          const { captchas, filtered, solutions, solved, error } = await frame.solveRecaptchas();
+          console.log("captchas", captchas);
+          console.log("solutions", solutions);
+          console.log("solved", solved);
+          console.log("error", error);
+        }
+
+        console.log(await page.findRecaptchas());
+        console.log(await page.solveRecaptchas());
 
         const screenshot = await newPage.screenshot({ type: "png", clip: { x: 660, width: 630, y: 240, height: 1500 } });
 
@@ -126,9 +142,9 @@ async function bootstrap() {
           }
         });
 
-        await newPage.close();
+        // await newPage.close();
       } catch (e) {
-        // console.log(e);
+        console.log(e);
         console.log("Произошла ошибка при обработке сообщения");
       }
     });
