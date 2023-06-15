@@ -6,7 +6,8 @@ import IConfig from "./types/config";
 import Session from "./utils/session";
 import Telegram from "./utils/telegram";
 import randomUseragent from "random-useragent";
-import { Browser } from "puppeteer";
+import { Browser, ElementHandle } from "puppeteer";
+import { log } from "console";
 
 const irbisBotToken = "6120857007:AAFKLS_yfOcPCltrCU-y-uXCnUNTvyGmIjU";
 
@@ -21,7 +22,7 @@ async function bootstrap() {
           id: "2captcha",
           token: twoCaptchaToken, // REPLACE THIS WITH YOUR OWN 2CAPTCHA API KEY ⚡
         },
-        visualFeedback: false,
+        visualFeedback: true,
         throwOnError: false,
         solveInViewportOnly: false,
         solveScoreBased: false,
@@ -46,7 +47,7 @@ async function bootstrap() {
     await client.getMe();
 
     const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox"] });
-
+    // executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
     const page = await createPage(browser, "https://bet-hub.com/");
 
     const loginInput = await page.waitForSelector("#user_name_id_module");
@@ -102,21 +103,39 @@ async function bootstrap() {
         console.log("Начало создания скриншота");
 
         const newPage = await createPage(browser, privateerObj.url);
-        const showButtons = await newPage.$$(".button_general");
 
-        for (let button of showButtons) {
-          await button.click({ delay: 200 });
-          await new Promise((rs) => setTimeout(rs, 2500));
+        const buttons = await newPage.$$(".button_general");
+
+        for (let button of buttons) {
+          await button.tap();
+          await new Promise((rs) => setTimeout(rs, 3000));
         }
+        // async function openButton(item: ElementHandle<Element>, counter = 0) {
+        //   try {
+        //     if (counter > 10) {
+        //       return;
+        //     }
+
+        //     const button = await item.waitForSelector(".button_general", {
+        //       timeout: 2000,
+        //     });
+
+        //     await button?.click();
+        //     await openButton(item, counter + 1);
+        //   } catch (e) {
+        //     console.log("not found");
+        //     return;
+        //   }
+        // }
+
+        // for (let item of items) {
+        //   await openButton(item);
+        // }
 
         await new Promise((rs) => setTimeout(rs, 15000));
 
         for (const frame of page.mainFrame().childFrames()) {
-          const { captchas, filtered, solutions, solved, error } = await frame.solveRecaptchas();
-          console.log("captchas", captchas);
-          console.log("solutions", solutions);
-          console.log("solved", solved);
-          console.log("error", error);
+          console.log(await frame.solveRecaptchas());
         }
 
         console.log(await page.findRecaptchas());
@@ -165,12 +184,19 @@ async function createPage(browser: Browser, url: string) {
     height: 1080,
     width: 1920,
     deviceScaleFactor: 1,
-    hasTouch: false,
-    isLandscape: false,
-    isMobile: false,
   });
 
-  await page.setUserAgent(randomUseragent.getRandom());
+  await page.setRequestInterception(true);
+
+  page.on("request", (request) => {
+    if (!request.isNavigationRequest() && request.redirectChain().length !== 0) {
+      request.abort();
+    } else {
+      request.continue();
+    }
+  });
+
+  // await page.setUserAgent(randomUseragent.getRandom());
   await page.setJavaScriptEnabled(true);
   page.setDefaultNavigationTimeout(0);
 
